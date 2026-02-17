@@ -32,6 +32,10 @@
 %% \documentclass[final,3p,times]{elsarticle}
 %% \documentclass[final,3p,times,twocolumn]{elsarticle}
 \documentclass[final,5p,times]{elsarticle}
+\usepackage{adjustbox}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{threeparttable}
 %% \documentclass[final,5p,times,twocolumn]{elsarticle}
 
 %% For including figures, graphicx.sty has been loaded in
@@ -147,14 +151,680 @@ Abstract text.
 %%
 
 %% Use \section commands to start a section
-\section{Example Section}
+\section{Introduction}
 \label{sec1}
 %% Labels are used to cross-reference an item using \ref command.
 
-Section text. See Subsection \ref{subsec1}.
+Alzheimer's disease (AD) represents a mounting global health crisis, with current prevalence affecting over 6 million Americans and 26.6 million people worldwide \cite{Skaria2022}. Projections indicate that worldwide prevalence may quadruple by 2050, exceeding 150 million individuals globally, with approximately 1 in 85 persons affected \cite{Twiss2025}. The associated economic burden is substantial: U.S.\ healthcare costs were estimated at \$321 billion in 2022 and are projected to surpass \$1 trillion by 2050 \cite{Skaria2022}. Importantly, these figures likely underestimate the true societal impact, as they insufficiently account for indirect costs such as productivity losses, caregiver burden, and diminished quality of life \cite{ElHayek2019}. Given the progressive nature of AD and the continued absence of disease-modifying treatments, early identification remains a critical priority \cite{Skaria2022}. Even modest interventions delaying disease onset by a single year could prevent approximately 9.2 million cases worldwide by 2050 \cite{Brookmeyer2007}.
+
+Conventional diagnostic procedures for AD, including cerebrospinal fluid analysis, neuroimaging, and comprehensive neuropsychological testing, are often invasive, costly, and time-consuming, limiting their scalability as frontline screening tools \cite{Laske2015}. These practical constraints highlight the urgent need for accessible, non-invasive, and cost-effective screening alternatives capable of identifying individuals in preclinical or early clinical stages \cite{Ahmad2023}. Complementary strategies such as neuropsychometric, blood-based, and neurophysiological assessments show promise for broader deployment \cite{Laske2015,Ahmad2023}. Additionally, presymptomatic indicators including metabolic alterations, sensory impairments, and gait disturbances have been explored as early screening markers \cite{BesinHumardani2024}. However, many of these approaches still require extensive validation in large-scale clinical settings before routine implementation \cite{Ahmad2023}.
+
+Within this context, spontaneous speech analysis using natural language processing (NLP) and machine learning has emerged as a promising non-invasive approach for early detection of cognitive decline. Multiple studies report measurable linguistic differences between cognitively unimpaired individuals and those with mild cognitive impairment (MCI) or AD across lexical, syntactic, and semantic domains \cite{Beltrami2018,Lindsay2021,Nyongesa2025,Gosztolya2019}. Discriminative markers include reduced lexical sophistication, diminished syntactic complexity, altered pronoun usage, and semantic disorganization, with semantic deficits demonstrating cross-linguistic robustness \cite{Lindsay2021,Nyongesa2025}. Automated analysis of acoustic and linguistic features derived from picture description tasks has achieved classification accuracies between 74\% and 86\% when distinguishing healthy controls, MCI, and AD groups \cite{Gosztolya2019}. Collectively, these findings suggest that speech-based NLP systems can capture subtle language alterations that precede overt clinical symptoms, supporting their potential for scalable cognitive screening and longitudinal monitoring \cite{Nyongesa2025}.
+
+Despite encouraging results, methodological heterogeneity remains a major challenge in clinical NLP for dementia. A systematic review of over 240 studies found that approximately half focus exclusively on dementia detection within constrained clinical datasets, leaving several methodological questions insufficiently explored \cite{PeledCohenReichart2025}. Cross-study comparisons are further complicated by inconsistencies in cohort composition, recording conditions, preprocessing pipelines, and evaluation protocols \cite{delaFuenteGarcia2020}. While transformer-based architectures such as DistilBERT demonstrate competitive performance relative to traditional approaches like TF-IDF with SVM classifiers \cite{Searle2020}, domain-specific benchmarking indicates that models optimized for general NLP tasks do not necessarily transfer optimally to clinical contexts. For example, a recent embedding benchmark for Alzheimer's cohort harmonization showed that performance rankings differ substantially from those observed in general-purpose benchmarks, reinforcing the need for domain-sensitive evaluation frameworks \cite{Adams2026}. Together, these findings highlight the importance of controlled experimental design and representation-aware evaluation in dementia-focused NLP research.
+
+Recent work has also examined how representation strategies influence AD detection performance from speech transcripts. Balagopalan et al.~\cite{Balagopalan2021} demonstrated that linguistic representations alone can achieve performance comparable to multimodal systems, provided that dataset balancing and evaluation protocols are carefully controlled. Pappagari et al.~\cite{Pappagari2021} showed that while fusion of acoustic and linguistic features can yield optimal performance, linguistic models frequently outperform acoustic-only systems, particularly when transcription quality is reliable. Ajroudi et al.~\cite{Ajroudi2024} reported 84.51\% accuracy on the ADReSSo dataset using OpenAI text embeddings combined with deep neural networks. More recently, Wang et al.~\cite{Wang2022} proposed a feature- and model-combination strategy integrating BERT and RoBERTa encoders within an ensemble framework, achieving up to 93.75\% accuracy on the ADReSS20 test set. While such ensemble-based approaches demonstrate the potential of representation combination under limited-data conditions, they also raise questions regarding model complexity, reproducibility, and sensitivity to representation choice.
+
+To further investigate the role of representation in clinically constrained settings, this study presents a controlled benchmark of contemporary text embeddings for automatic AD detection from spontaneous-speech transcripts. Rather than introducing a new architecture, we systematically evaluate widely used baseline embeddings alongside recent large-scale pretrained models within a unified experimental framework. Two clinically relevant tasks are considered: (i) binary classification (AD vs.\ cognitively healthy controls) and (ii) cognitive-score prediction via Mini-Mental State Examination (MMSE) regression. All embedding–classifier combinations are assessed using harmonized preprocessing, consistent evaluation metrics, and complementary validation settings to ensure methodological comparability and to probe generalization behavior.
+
+Our results demonstrate that embedding selection exerts a decisive influence on downstream clinical NLP performance. On the official ADReSS20 held-out test set, several embedding–classifier combinations achieved strong classification performance, reaching up to 87.50\% accuracy. Importantly, notable differences were observed between training and testing behavior across embeddings, indicating that high in-sample performance does not necessarily translate into stable generalization in dementia-oriented applications. These findings highlight that representation choice should be treated as a central design variable, with explicit consideration of robustness, overfitting risk, and translational feasibility.
+
+From a practical perspective, this work provides reproducible evidence to guide embedding selection in AD speech analytics. By systematically isolating the impact of representation under controlled experimental conditions, we aim to improve methodological transparency and support more reliable deployment pathways for clinical NLP systems. Ultimately, this study contributes to a representation-focused perspective that complements architecture-driven advances and helps bridge the gap between reported computational performance and real-world applicability in the screening of dementia.
+
+
+\section{Materials and Methods}
+
+\subsection{Dataset and inclusion criteria}
+
+This study used data from the ADReSS Challenge (INTERSPEECH 2020), a benchmark specifically designed for automatic AD detection from spontaneous speech under controlled, bias-reduced experimental conditions. The challenge defines two core tasks: (i) binary classification (AD vs. cognitively healthy controls), and (ii) regression for predicting MMSE scores. The benchmark was designed to improve comparability across studies by reducing common confounders such as class imbalance and repeated participant samples under multiple conditions.
+
+The dataset comprises speech recordings from 156 participants, balanced by diagnostic group: 78 participants with AD and 78 controls. Demographic stratification by age and sex was also balanced in the released corpus to mitigate obvious sampling distortions and improve downstream model robustness. This demographic balancing is relevant because language and cognition are affected by aging and sociobiological factors, and uncontrolled demographic imbalance can inflate apparent model performance without true clinical utility.
+
+Following the official ADReSS setup, we used the standard split into training (70\%) and test (30\%) partitions. This split has become common in the literature and allows direct comparability with prior methods evaluated under the same benchmark protocol. In addition to this predefined split, we employed cross-validation procedures (described in Section~2.4) to assess robustness and generalization across complementary evaluation settings.
+
+For inclusion in the text-based modeling pipeline, each sample had to provide a usable transcript associated with a valid diagnostic label (AD/non-AD) and, for the regression task, an available MMSE target value. Samples lacking task-specific targets were excluded from the corresponding analysis branch. Because the objective of this study is language-based modeling, only transcript-derived features were used in the embedding block.
+
+To illustrate the linguistic signal exploited by the models, the corpus includes spontaneous speech narratives with observable differences between groups, such as hesitations, lexical retrieval issues, reduced syntactic complexity, and discourse fragmentation in AD speech. These phenomena motivated the use of embedding-based semantic representations capable of encoding higher-order text structure beyond sparse lexical indicators.
+
+\subsection{Processing pipeline: transcript preprocessing and embedding extraction}
+
+The embedding-centered pipeline consisted of two stages: (i) transcript preprocessing and (ii) vector representation generation.
+
+\paragraph{Preprocessing}
+Transcript cleaning followed the same procedure adopted in the prior text block of the study. Specifically, interviewer utterances were removed, and symbols considered non-informative for textual modeling were filtered out. This step aimed to retain participant-centered linguistic content while reducing annotation artifacts and conversational noise that could bias embedding generation or classifier fitting.
+
+\paragraph{Embedding extraction}
+We evaluated ten embedding models selected to cover both strong contemporary performers and widely used baselines. Seven models were selected based on top ranking in the Massive Text Embedding Benchmark (MTEB), criterion “Classification Average” across multiple datasets: NV-Embed-v2 (NV2), SFR-Embedding-2\_R (SFR2), bge-en-icl (BGE), stella\_en\_1.5B\_v5 (STELLA), gte-Qwen2-7B-instruct (GTE), jina-embeddings-v3 (JINA), and Linq-Embed-Mistral (LEM). Three additional commonly used models were included as practical baselines: bert-base-multilingual-uncased-sentiment (BERT-S), ernie-2.0-large-en (ERNIE), and roberta-base-sentiment-latest (RoBERTa-S). Embeddings were generated through the Hugging Face ecosystem to ensure a standardized and reproducible extraction stack.
+
+This model set was intentionally heterogeneous in architecture, scale, and pretraining profile. The goal was not only to identify the single best performer, but also to characterize stability trends across representation families. In clinical NLP contexts, such trends are often as important as peak performance because deployment decisions depend on robustness under data shift and limited-sample conditions.
+
+Conceptually, using dense embeddings instead of handcrafted lexical indicators allows the pipeline to encode semantically rich signal from spontaneous narratives, including non-local context and paraphrastic structure. This is relevant for AD detection because disease-related language changes can manifest as subtle semantic disorganization and discourse-level degradation rather than isolated keyword-level anomalies.
+
+\subsection{Predictive models and training strategy}
+
+For downstream learning, we used a family of classical supervised algorithms for both classification and regression tasks. In the embedding block, we retained the algorithmic backbone used in previous experiments, with two targeted substitutions motivated by data-distribution and empirical suitability considerations: Linear Discriminant Analysis (LDA) was replaced by Logistic Regression (LR), and Decision Tree (DT) was replaced by Naive Bayes (NB). Additionally, 1-nearest neighbor (1NN) was included in this block. The rationale, as documented in the original study, is that embedding vectors may violate assumptions required by LDA, while NB has well-established practical use with text representations and showed stronger suitability than DT in this context.
+
+The evaluated model family therefore included:
+
+\begin{itemize}
+    \item kNN variant (k=1),
+    \item Naive Bayes (NB),
+    \item Support Vector Machine (SVM),
+    \item Random Forest (RF),
+    \item Logistic Regression (LR),
+    \item Neural Network (NN).
+\end{itemize}
+
+Each model consumed fixed-size embedding vectors as input, with no feature engineering beyond preprocessing and embedding extraction. This design isolates the effect of representation quality and minimizes confounding effects from handcrafted feature pipelines. For fair comparison, models were evaluated under the same partitioning and validation procedures for all embeddings.
+
+For classification, the objective was to discriminate AD from controls. For regression, the objective was to predict MMSE scores. Using the same representation pool across both tasks enabled a clinically relevant dual assessment: diagnostic discrimination and cognitive severity estimation.
+
+From a methodological standpoint, this “shared representation, multi-task evaluation” design allows identifying embeddings that are not only accurate in binary diagnosis but also informative for continuous cognitive status modeling. Such cross-task consistency is important when selecting candidate methods for translational dementia screening pipelines.
+
+\subsection{Evaluation protocol}
+
+To evaluate generalization comprehensively, we used three complementary validation settings:
+
+\paragraph{LOSO on training set.}
+Leave-One-Subject-Out cross-validation was applied within the official training partition. This procedure provides an internal estimate of model behavior under repeated subject-level resampling and is useful for early robustness inspection.
+
+\paragraph{Holdout on official test set.}
+Models trained on training data were evaluated on the predefined ADReSS test split. This setting approximates benchmark-style external validation and supports direct comparability with challenge-oriented literature.
+
+\paragraph{LOSO on combined data (training + test).}
+A second LOSO run over the merged dataset was performed to obtain a broader global view of representation behavior under maximal sample usage.
+
+All three procedures were executed for both tasks:
+
+\begin{itemize}
+    \item classification (AD vs.\ control),
+    \item regression (MMSE prediction).
+\end{itemize}
+
+This protocol serves two purposes. First, it separates optimistic in-sample behavior from realistic out-of-sample performance. Second, it reveals consistency patterns across validation regimes, helping identify embeddings that are not merely high-performing in one split but stable across settings. In clinically oriented machine learning, this distinction is critical: an embedding-model pair with slightly lower peak score but stronger cross-setting stability may be preferable for deployment-oriented research.
+
+The benchmark also includes baselines reported in the challenge context, which were used as practical references when interpreting model competitiveness and difficulty level, particularly in regression where surpassing baseline can be more challenging.
+
+\subsection{Performance metrics and statistical analysis}
+
+\subsubsection{Classification metrics}
+
+For classification, we reported:
+
+\begin{itemize}
+    \item Accuracy (Acc.) as the primary endpoint,
+    \item Recall (Rec.),
+    \item Precision (Prec.).
+\end{itemize}
+
+Accuracy captures global correctness, while recall and precision provide class-sensitive behavior and error trade-offs. Given the clinical context, this combination is useful to avoid over-interpreting accuracy in isolation and to better understand false-negative vs.\ false-positive tendencies.
+
+\subsubsection{Regression metrics}
+
+For MMSE regression, we used:
+
+\begin{itemize}
+    \item Mean Absolute Error (MAE),
+    \item Root Mean Squared Error (RMSE),
+    \item Pearson correlation coefficient ($r$) between true and predicted scores.
+\end{itemize}
+
+MAE offers interpretable average absolute deviation, RMSE penalizes larger errors more strongly, and Pearson’s $r$ quantifies linear agreement in score trends. Together, they provide complementary views of predictive fidelity and clinical usefulness for cognitive severity estimation.
+
+\subsubsection{Statistical significance testing}
+
+To assess whether performance differences across embeddings were statistically meaningful, we applied a non-parametric inferential pipeline:
+
+\begin{itemize}
+    \item Friedman test for omnibus comparison across multiple methods,
+    \item Nemenyi post-hoc test for pairwise differences when the omnibus test was significant.
+\end{itemize}
+
+In the reported analysis, Friedman yielded $p < 0.01$ for both classifier and regressor comparisons, supporting the presence of significant differences among embedding approaches. Nemenyi analysis identified specific embedding pairs with significant performance gaps in both classification and regression settings, reinforcing that representation selection materially affects downstream outcomes.
+
+This inferential step is essential in benchmark studies with many model combinations, because rank-order differences can otherwise be mistaken for robust superiority when they may reflect sampling noise. By combining point estimates (Acc./RMSE etc.) with statistical testing, the analysis supports more defensible conclusions about embedding choice.
+
+\subsection{Reproducibility and ethical considerations}
+
+This work uses a publicly available benchmark corpus released for research under challenge governance. The analyses are observational and computational, with no intervention, no treatment assignment, and no prospective patient recruitment conducted by the authors in this study. The focus is methodological evaluation of automated language-based screening support, not clinical decision replacement. Accordingly, model outputs should be interpreted as research signals that may assist triage-oriented workflows, rather than standalone diagnostic decisions.
+
+In translational terms, the intended contribution is to improve methodological clarity in selecting embedding representations for AD-related NLP pipelines. Any real-world clinical adoption would require additional external validation, calibration in target populations, and governance procedures addressing fairness, transparency, and human oversight.
+
+\section{Results and Discussion}
+\label{sec:results_discussion}
+
+\subsection{Main classification results}
+\label{subsec:main_classification_results}
+
+The classification experiments show that embedding-based text representations are effective for distinguishing participants with AD from cognitively healthy controls, with consistent gains over baseline-oriented expectations across multiple validation settings. In the LOSO procedure on the training set, modern embeddings such as GTE, STELLA, LEM, and NV2 repeatedly reached high accuracy levels depending on the downstream classifier, with top values in the high-80\% range (e.g., 88.89\% for GTE with SVM or NB). This pattern indicates that representation quality is a major determinant of model performance in this task, often more influential than the classifier family alone. In practical terms, richer semantic embeddings appear to preserve clinically relevant language information related to cognitive decline more effectively than traditional representations.
+
+\begin{table*}[t]
+\centering
+\caption{Classification results in LOSO on the training set (Block 1).}
+\label{tab:table7}
+\begin{threeparttable}
+\footnotesize
+\setlength{\tabcolsep}{3pt} % default ~6pt; diminua se precisar
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccccccccccccccc}
+\toprule
+\multirow{2}{*}{Embedding}
+& \multicolumn{3}{c}{kNN ($k=1$)}
+& \multicolumn{3}{c}{NB}
+& \multicolumn{3}{c}{SVM}
+& \multicolumn{3}{c}{RF}
+& \multicolumn{3}{c}{LR}
+& \multicolumn{3}{c}{NN} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}\cmidrule(lr){14-16}\cmidrule(lr){17-19}
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc. \\
+\midrule
+GTE    & 77.55\% & 77.55\% & 75.00\% & 82.50\% & 89.58\% & 88.89\% & 88.00\% & 97.73\% & 88.89\% & 88.00\% & 89.58\% & 85.19\% & 87.50\% & 93.75\% & 88.89\% & 92.00\% & 84.91\% & 84.26\% \\
+STELLA & 75.00\% & 80.49\% & 73.15\% & 81.25\% & 85.42\% & 81.48\% & 88.00\% & 93.48\% & 87.04\% & 90.00\% & 83.64\% & 84.26\% & 85.00\% & 86.54\% & 85.19\% & 80.00\% & 90.20\% & 87.96\% \\
+LEM    & 78.17\% & 80.85\% & 76.85\% & 79.63\% & 79.63\% & 79.63\% & 76.58\% & 89.36\% & 84.26\% & 85.58\% & 88.46\% & 87.04\% & 84.79\% & 84.31\% & 82.41\% & 75.93\% & 87.23\% & 82.41\% \\
+NV2    & 79.58\% & 80.49\% & 73.15\% & 81.87\% & 85.42\% & 81.48\% & 87.25\% & 93.48\% & 87.04\% & 88.84\% & 83.64\% & 84.26\% & 84.75\% & 77.78\% & 77.78\% & 85.00\% & 90.20\% & 87.96\% \\
+JINA   & 77.82\% & 79.41\% & 68.52\% & 82.91\% & 88.64\% & 81.48\% & 80.00\% & 95.00\% & 83.33\% & 77.78\% & 85.71\% & 82.41\% & 85.51\% & 88.64\% & 81.48\% & 83.51\% & 84.91\% & 84.26\% \\
+BERT-S & 72.85\% & 73.58\% & 73.15\% & 62.58\% & 60.00\% & 63.89\% & 83.52\% & 80.77\% & 79.63\% & 82.75\% & 85.11\% & 80.56\% & 84.83\% & 84.31\% & 82.41\% & 84.00\% & 85.71\% & 82.41\% \\
+SFR2   & 73.08\% & 66.67\% & 66.67\% & 70.25\% & 78.00\% & 75.93\% & 77.87\% & 89.36\% & 84.26\% & 77.35\% & 77.36\% & 76.85\% & 79.49\% & 66.67\% & 65.74\% & 79.63\% & 87.76\% & 84.26\% \\
+ERNIE  & 69.57\% & 70.45\% & 66.67\% & 72.50\% & 75.00\% & 74.07\% & 68.52\% & 67.92\% & 67.59\% & 67.57\% & 78.43\% & 76.85\% & 80.00\% & 82.35\% & 80.56\% & 81.48\% & 80.00\% & 80.56\% \\
+RoBERTa-S & 62.58\% & 62.50\% & 62.96\% & 68.00\% & 75.00\% & 72.22\% & 77.79\% & 79.55\% & 74.07\% & 76.52\% & 68.42\% & 69.44\% & 79.25\% & 77.36\% & 76.85\% & 76.57\% & 79.25\% & 78.70\% \\
+BGE    & 64.62\% & 65.31\% & 63.89\% & 62.56\% & 66.67\% & 60.19\% & 61.74\% & 68.42\% & 56.48\% & 74.78\% & 72.55\% & 71.30\% & 78.57\% & 77.78\% & 77.78\% & 72.25\% & 73.47\% & 71.30\% \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{threeparttable}
+\end{table*}
+
+When the analysis moved to the official holdout test partition, the best results remained strong and, importantly, were achieved by multiple embedding--classifier pairs rather than by a single isolated model. The manuscript reports a best holdout accuracy of 87.50\%, achieved by LEM+NB, LEM+LR, GTE+SVM, ERNIE+NB, and ERNIE+NN. This convergence is important from a methodological standpoint: it suggests that high out-of-sample performance is reproducible through different modeling pathways, reducing the risk that conclusions are driven by one lucky configuration. It also supports the view that properly selected embeddings can create robust feature spaces where several classical classifiers remain competitive.
+
+\begin{table*}[t]
+\centering
+\caption{Classification results in holdout on the official test set (Table 8).}
+\label{tab:table8}
+\begin{threeparttable}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccccccccccccccc}
+\toprule
+\multirow{2}{*}{Embedding}
+& \multicolumn{3}{c}{kNN ($k=1$)}
+& \multicolumn{3}{c}{NB}
+& \multicolumn{3}{c}{SVM}
+& \multicolumn{3}{c}{RF}
+& \multicolumn{3}{c}{LR}
+& \multicolumn{3}{c}{NN} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}\cmidrule(lr){14-16}\cmidrule(lr){17-19}
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc. \\
+\midrule
+GTE
+& 69.33\% & 72.22\% & 66.67\%
+& 84.72\% & 86.36\% & 83.33\%
+& 89.20\% & 90.91\% & 87.50\%
+& 79.41\% & 77.78\% & 81.25\%
+& 87.94\% & 90.48\% & 85.42\%
+& 77.67\% & 78.26\% & 77.08\% \\
+
+STELLA
+& 79.17\% & 64.71\% & 60.42\%
+& 79.17\% & 81.82\% & 79.17\%
+& 78.50\% & 90.00\% & 83.33\%
+& 78.50\% & 79.17\% & 79.17\%
+& 78.50\% & 80.00\% & 81.25\%
+& 78.50\% & 79.17\% & 79.17\% \\
+
+LEM
+& 62.50\% & 88.24\% & 77.08\%
+& 84.72\% & 90.91\% & 87.50\%
+& 79.17\% & 90.48\% & 85.42\%
+& 83.33\% & 86.96\% & 85.42\%
+& 85.94\% & 90.91\% & 87.50\%
+& 79.17\% & 86.36\% & 83.33\% \\
+
+NV2
+& 79.79\% & 86.67\% & 72.92\%
+& 79.89\% & 80.95\% & 77.08\%
+& 82.08\% & 85.00\% & 79.17\%
+& 83.33\% & 86.96\% & 85.42\%
+& 86.67\% & 90.00\% & 83.33\%
+& 82.08\% & 85.00\% & 79.17\% \\
+
+JINA
+& 81.25\% & 81.25\% & 70.83\%
+& 77.50\% & 79.17\% & 79.17\%
+& 75.00\% & 85.71\% & 81.25\%
+& 79.17\% & 82.61\% & 81.25\%
+& 82.50\% & 86.36\% & 83.33\%
+& 78.50\% & 76.19\% & 72.92\% \\
+
+BERT-S
+& 68.89\% & 71.43\% & 68.75\%
+& 62.50\% & 52.63\% & 54.17\%
+& 62.50\% & 83.33\% & 75.00\%
+& 52.63\% & 76.47\% & 68.75\%
+& 86.67\% & 88.89\% & 79.17\%
+& 77.50\% & 86.67\% & 72.92\% \\
+
+SFR2
+& 68.89\% & 73.68\% & 68.75\%
+& 78.50\% & 84.21\% & 77.08\%
+& 78.50\% & 90.91\% & 68.75\%
+& 83.33\% & 86.96\% & 85.42\%
+& 82.50\% & 88.89\% & 79.17\%
+& 72.50\% & 80.00\% & 75.00\% \\
+
+ERNIE
+& 71.15\% & 73.68\% & 68.75\%
+& 87.50\% & 87.50\% & 87.50\%
+& 79.41\% & 77.78\% & 81.25\%
+& 84.71\% & 84.00\% & 85.42\%
+& 83.33\% & 83.33\% & 83.33\%
+& 89.20\% & 90.91\% & 87.50\% \\
+
+RoBERTa-S
+& 76.00\% & 70.00\% & 75.00\%
+& 76.00\% & 78.95\% & 72.92\%
+& 75.00\% & 69.23\% & 70.83\%
+& 78.50\% & 80.00\% & 81.25\%
+& 79.17\% & 76.00\% & 77.08\%
+& 78.50\% & 79.17\% & 79.17\% \\
+
+BGE
+& 68.18\% & 78.26\% & 77.08\%
+& 56.25\% & 46.67\% & 47.92\%
+& 77.08\% & 55.56\% & 52.08\%
+& 46.67\% & 73.91\% & 72.92\%
+& 55.56\% & 68.18\% & 66.67\%
+& 56.25\% & 68.18\% & 66.67\% \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{threeparttable}
+\end{table*}
+
+The combined LOSO evaluation over training+test data provides a broader and more conservative perspective under greater variability. In this setting, STELLA+NN achieved the top overall accuracy (87.18\%), while GTE+SVM and LEM+NN remained close (86.54\% and 85.90\%, respectively). Most strong combinations stayed above the 75\% classification baseline, while 1NN consistently underperformed and did not surpass baseline in the combined analysis. Together, these findings support two key messages: first, modern embeddings are robust across validation scenarios; second, classifier choice still matters, especially when moving from cleaner split-specific optimization to broader pooled evaluation.
+
+\begin{table*}[t]
+\centering
+\caption{Classification results in LOSO on the combined training+test set (Table 9).}
+\label{tab:table9}
+\begin{threeparttable}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccccccccccccccc}
+\toprule
+\multirow{2}{*}{Embedding}
+& \multicolumn{3}{c}{kNN ($k=1$)}
+& \multicolumn{3}{c}{NB}
+& \multicolumn{3}{c}{SVM}
+& \multicolumn{3}{c}{RF}
+& \multicolumn{3}{c}{LR}
+& \multicolumn{3}{c}{NN} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}\cmidrule(lr){14-16}\cmidrule(lr){17-19}
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc.
+& Rec. & Prec. & Acc. \\
+\midrule
+
+GTE
+& 70.26\% & 75.36\% & 72.44\%
+& 87.25\% & 85.14\% & 83.33\%
+& 85.18\% & 88.00\% & 86.54\%
+& 84.58\% & 83.33\% & 83.33\%
+& 83.33\% & 87.67\% & 85.26\%
+& 82.05\% & 82.05\% & 82.05\% \\
+
+STELLA
+& 76.24\% & 80.70\% & 72.44\%
+& 80.27\% & 82.86\% & 79.49\%
+& 85.64\% & 89.71\% & 84.62\%
+& 80.77\% & 87.14\% & 83.33\%
+& 84.62\% & 84.62\% & 84.62\%
+& 87.18\% & 87.18\% & 87.18\% \\
+
+LEM
+& 75.25\% & 80.95\% & 75.00\%
+& 82.05\% & 82.05\% & 82.05\%
+& 87.25\% & 88.73\% & 85.26\%
+& 78.21\% & 84.42\% & 83.97\%
+& 85.18\% & 85.53\% & 84.62\%
+& 86.25\% & 87.84\% & 85.90\% \\
+
+NV2
+& 73.34\% & 75.36\% & 72.44\%
+& 48.72\% & 79.17\% & 76.92\%
+& 80.74\% & 82.61\% & 78.85\%
+& 80.77\% & 87.14\% & 83.33\%
+& 84.62\% & 84.62\% & 84.62\%
+& 82.05\% & 82.05\% & 82.05\% \\
+
+JINA
+& 76.24\% & 78.85\% & 69.23\%
+& 79.25\% & 81.69\% & 78.85\%
+& 86.57\% & 88.06\% & 82.69\%
+& 79.49\% & 84.00\% & 82.69\%
+& 80.12\% & 86.76\% & 82.05\%
+& 72.14\% & 72.00\% & 71.15\% \\
+
+BERT-S
+& 64.24\% & 63.41\% & 64.10\%
+& 60.17\% & 59.09\% & 62.82\%
+& 80.74\% & 82.61\% & 78.85\%
+& 80.77\% & 81.94\% & 79.49\%
+& 78.85\% & 78.85\% & 78.85\%
+& 76.46\% & 76.25\% & 76.92\% \\
+
+SFR2
+& 69.24\% & 70.42\% & 68.59\%
+& 78.26\% & 79.17\% & 76.92\%
+& 42.19\% & 24.53\% & 32.69\%
+& 70.78\% & 80.00\% & 78.85\%
+& 70.17\% & 70.27\% & 69.23\%
+& 78.14\% & 81.33\% & 80.13\% \\
+
+ERNIE
+& 71.12\% & 73.13\% & 69.87\%
+& 80.25\% & 80.26\% & 79.49\%
+& 81.24\% & 80.72\% & 82.69\%
+& 79.08\% & 79.22\% & 78.85\%
+& 83.92\% & 84.42\% & 83.97\%
+& 82.78\% & 83.12\% & 82.69\% \\
+
+RoBERTa-S
+& 64.24\% & 64.86\% & 64.10\%
+& 73.73\% & 75.00\% & 71.79\%
+& 76.54\% & 77.78\% & 75.64\%
+& 73.46\% & 73.42\% & 73.72\%
+& 80.12\% & 80.52\% & 80.13\%
+& 76.54\% & 77.50\% & 78.21\% \\
+
+BGE
+& 67.76\% & 69.86\% & 68.59\%
+& 60.34\% & 64.44\% & 58.33\%
+& 65.18\% & 68.00\% & 61.54\%
+& 74.18\% & 73.75\% & 74.36\%
+& 74.36\% & 76.92\% & 76.92\%
+& 77.26\% & 77.22\% & 77.56\% \\
+
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{threeparttable}
+\end{table*}
+
+
+A clinically meaningful interpretation emerges from the confusion-matrix analysis reported for top models. STELLA+NN showed lower false-negative counts than competing high-performing alternatives, while also reducing false positives relative to earlier compression-based best models in the study. Since false negatives are particularly costly in cognitive screening (missed at-risk individuals), this error profile strengthens the practical relevance of STELLA-like representations even when global accuracy differences between top models are modest. In other words, not all 87\% models are clinically equivalent: the distribution of errors across classes matters for real-world triage workflows.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig12.pdf}
+\caption{Comparison of classification accuracy between training (LOSO) and test (holdout) for different embeddings (Figure 12).}
+\label{fig:fig12_cls_train_vs_test}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig13.pdf}
+\caption{Confusion matrices for STELLA (NN), GTE (SVM), and LEM (NN) (Figure 13).}
+\label{fig:fig13_confusion_matrices}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig14.pdf}
+\caption{Classification performance across embeddings and classifiers (Figure 14).}
+\label{fig:fig14_cls_ranked}
+\end{figure}
+
+\subsection{Regression results (MMSE prediction)}
+\label{subsec:regression_results_mmse}
+
+Compared with classification, the MMSE regression task proved substantially more difficult and more sensitive to embedding--regressor interaction. In LOSO on the training set, no tested combination surpassed the RMSE reference baseline (5.2), although several approached it with acceptable correlation coefficients. For example, LEM+NB, NV2+NN, and STELLA+NB produced comparatively better training-side trade-offs among MAE, RMSE, and Pearson’s $r$. This indicates that transcript-derived embeddings contain relevant cognitive-severity signal, but not with the same consistency seen in binary diagnosis.
+
+\begin{table*}[t]
+\centering
+\caption{Regression results in LOSO on the training set (Table 10).}
+\label{tab:table10}
+\begin{threeparttable}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccccccccccccccc}
+\toprule
+\multirow{2}{*}{Embedding}
+& \multicolumn{3}{c}{kNN ($k=1$)}
+& \multicolumn{3}{c}{SVM}
+& \multicolumn{3}{c}{LR}
+& \multicolumn{3}{c}{NN}
+& \multicolumn{3}{c}{RF}
+& \multicolumn{3}{c}{NB} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}\cmidrule(lr){14-16}\cmidrule(lr){17-19}
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$ \\
+\midrule
+LEM       & 5.08 & 7.59 & 0.47  & 5.51 & 7.23 & 0.54  & 5.23 & 6.61 & 0.49  & 4.86 & 6.17 & 0.54  & 4.99 & 6.23 & 0.51  & 4.66 & 5.95 & 0.56 \\
+NV2       & 6.34 & 8.92 & 0.23  & 5.89 & 7.67 & 0.49  & 5.23 & 6.70 & 0.50  & 4.35 & 5.79 & 0.60  & 4.79 & 5.97 & 0.59  & 4.45 & 5.81 & 0.59 \\
+GTE       & 5.41 & 8.07 & 0.37  & 5.52 & 7.30 & 0.57  & 5.75 & 7.18 & 0.43  & 4.92 & 6.36 & 0.53  & 5.00 & 6.17 & 0.53  & 4.48 & 5.93 & 0.56 \\
+SFR2      & 6.57 & 8.96 & 0.31  & 6.09 & 8.04 & 0.35  & 4.88 & 6.52 & 0.54  & 5.01 & 6.10 & 0.56  & 5.16 & 6.32 & 0.48  & 4.42 & 5.78 & 0.59 \\
+JINA      & 6.43 & 9.04 & 0.27  & 5.45 & 7.21 & 0.54  & 6.93 & 8.69 & 0.37  & 4.69 & 6.39 & 0.53  & 4.63 & 5.79 & 0.62  & 4.48 & 6.03 & 0.55 \\
+BGE       & 6.65 & 9.23 & 0.20  & 6.12 & 8.00 & 0.05  & 5.57 & 7.22 & 0.07  & 5.05 & 6.48 & 0.54  & 5.12 & 6.26 & 0.49  & 4.89 & 6.12 & 0.52 \\
+BERT-S    & 6.10 & 8.66 & 0.31  & 5.50 & 7.26 & 0.42  & 6.21 & 7.73 & 0.42  & 5.51 & 7.56 & 0.38  & 5.01 & 6.20 & 0.51  & 4.96 & 6.10 & 0.53 \\
+ERNIE     & 6.27 & 8.92 & 0.26  & 6.05 & 8.01 & 0.32  & 5.19 & 6.69 & 0.53  & 6.46 & 8.27 & -0.13 & 5.09 & 6.25 & 0.51  & 4.39 & 5.70 & 0.61 \\
+STELLA    & 5.99 & 8.56 & 0.27  & 5.49 & 7.28 & 0.59  & 6.69 & 8.07 & 0.41  & 7.00 & 8.44 & 0.39  & 4.77 & 6.04 & 0.55  & 4.36 & 5.74 & 0.60 \\
+RoBERTa-S & 7.28 & 9.75 & 0.22  & 5.97 & 7.76 & 0.33  & 6.63 & 8.48 & 0.34  & 6.05 & 7.96 & 0.14  & 5.36 & 6.41 & 0.46  & 4.85 & 6.04 & 0.54 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{threeparttable}
+\end{table*}
+
+On holdout testing, performance improved for several combinations, and some models crossed the baseline threshold. The table reports strong MMSE results for GTE+RF (RMSE 4.77), GTE+NB (4.90), and LEM+NB (4.97), with additional near-baseline performance for STELLA+RF and STELLA+NB (both around 5.01). This suggests that while regression is harder globally, some embedding--model pairs can still produce clinically useful cognitive-score approximations under unseen data. The fact that NB and RF repeatedly appear among top regressors also indicates that stability and bias-variance behavior of the predictor are critical when embeddings are used as high-dimensional semantic inputs.
+
+\begin{table*}[t]
+\centering
+\caption{Regression results (MAE, RMSE, Pearson's $r$).}
+\label{tab:regression_next}
+\begin{threeparttable}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccccccccccccccc}
+\toprule
+\multirow{2}{*}{Embedding}
+& \multicolumn{3}{c}{kNN ($k=1$)}
+& \multicolumn{3}{c}{SVM}
+& \multicolumn{3}{c}{LR}
+& \multicolumn{3}{c}{NN}
+& \multicolumn{3}{c}{RF}
+& \multicolumn{3}{c}{NB} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}\cmidrule(lr){14-16}\cmidrule(lr){17-19}
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$ \\
+\midrule
+LEM       & 5.15 & 7.36 & 0.42 & 4.17 & 5.63 & 0.67 & 4.28 & 5.78 & 0.56 & 3.96 & 5.32 & 0.59 & 4.12 & 5.20 & 0.54 & 3.76 & 4.97 & 0.60 \\
+NV2       & 4.06 & 5.76 & 0.56 & 4.48 & 6.09 & 0.58 & 4.82 & 6.61 & 0.51 & 3.73 & 5.40 & 0.56 & 3.86 & 5.01 & 0.58 & 3.57 & 5.13 & 0.58 \\
+GTE       & 4.21 & 6.46 & 0.52 & 4.16 & 5.73 & 0.67 & 4.52 & 6.10 & 0.57 & 4.36 & 5.74 & 0.57 & 3.89 & 4.77 & 0.66 & 3.57 & 4.90 & 0.61 \\
+SFR2      & 4.60 & 6.52 & 0.45 & 4.80 & 6.54 & 0.45 & 5.05 & 6.92 & 0.34 & 4.15 & 5.29 & 0.51 & 4.37 & 5.41 & 0.50 & 3.93 & 5.57 & 0.47 \\
+JINA      & 4.94 & 7.20 & 0.35 & 3.98 & 5.56 & 0.64 & 6.63 & 8.82 & 0.16 & 4.14 & 6.02 & 0.45 & 4.07 & 5.17 & 0.54 & 3.95 & 5.53 & 0.48 \\
+BGE       & 4.88 & 7.25 & 0.55 & 4.92 & 6.54 & 0.07 & 4.94 & 6.51 & 0.34 & 5.64 & 7.20 & 0.31 & 4.85 & 5.98 & 0.31 & 4.43 & 5.58 & 0.45 \\
+BERT-S    & 6.04 & 8.17 & 0.35 & 4.85 & 6.04 & 0.31 & 5.95 & 7.94 & 0.22 & 5.33 & 6.71 & 0.14 & 4.63 & 5.86 & 0.37 & 4.45 & 5.66 & 0.41 \\
+ERNIE     & 5.17 & 7.02 & 0.25 & 4.64 & 6.38 & 0.64 & 5.17 & 6.55 & 0.41 & 5.21 & 6.71 & -0.13 & 4.73 & 5.63 & 0.49 & 4.52 & 5.30 & 0.56 \\
+STELLA    & 5.88 & 8.23 & 0.16 & 4.28 & 5.79 & 0.59 & 5.48 & 6.99 & 0.54 & 5.93 & 7.41 & 0.48 & 4.02 & 5.01 & 0.63 & 3.85 & 5.01 & 0.60 \\
+RoBERTa-S & 6.19 & 8.54 & 0.22 & 4.75 & 6.21 & 0.32 & 5.80 & 7.65 & 0.43 & 4.71 & 6.61 & 0.17 & 4.53 & 5.38 & 0.53 & 4.20 & 5.34 & 0.53 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{threeparttable}
+\end{table*}
+
+
+In the broader combined LOSO setting, regression became more challenging again, with only one top combination clearly below the baseline: STELLA+RF at RMSE 5.15. LEM+RF (5.24) and other close competitors remained near the reference line but did not consistently outperform it. This behavior is consistent with increased heterogeneity when all samples are pooled. It reinforces the idea that MMSE prediction from text alone may require either stronger task-specific adaptation (e.g., fine-tuning embeddings for cognitive scoring) or multimodal augmentation to achieve robust superiority across validation regimes.
+
+Another noteworthy point is the unexpected train-vs-test behavior mentioned in the manuscript for some regression comparisons, where test-side error appeared lower than training-side error in aggregate visualization. Rather than treating this as a purely positive sign, it should be interpreted as evidence of split sensitivity and sample-variability effects in small clinical datasets. This further supports the use of multiple validation protocols and cautious claims about regression generalization.
+
+\begin{table*}[t]
+\centering
+\caption{Regression results (MAE, RMSE, Pearson's $r$).}
+\label{tab:regression_last}
+\begin{threeparttable}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccccccccccccccc}
+\toprule
+\multirow{2}{*}{Embedding}
+& \multicolumn{3}{c}{kNN ($k=1$)}
+& \multicolumn{3}{c}{SVM}
+& \multicolumn{3}{c}{LR}
+& \multicolumn{3}{c}{NN}
+& \multicolumn{3}{c}{RF}
+& \multicolumn{3}{c}{NB} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(lr){11-13}\cmidrule(lr){14-16}\cmidrule(lr){17-19}
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$
+& MAE & RMSE & $r$ \\
+\midrule
+LEM       & 5.12 & 7.19 & 0.49 & 4.41 & 5.78 & 0.56 & 4.90 & 6.39 & 0.60 & 4.82 & 6.10 & 0.52 & 4.55 & 5.24 & 0.57 & 4.21 & 5.50 & 0.59 \\
+NV2       & 5.12 & 7.31 & 0.37 & 4.04 & 5.59 & 0.58 & 5.00 & 6.88 & 0.52 & 5.03 & 6.66 & 0.51 & 4.34 & 5.43 & 0.59 & 4.00 & 5.50 & 0.59 \\
+GTE       & 4.75 & 7.29 & 0.45 & 4.68 & 6.00 & 0.55 & 4.89 & 6.62 & 0.63 & 5.34 & 6.64 & 0.50 & 4.45 & 5.46 & 0.59 & 3.96 & 5.42 & 0.58 \\
+SFR2      & 5.97 & 8.48 & 0.29 & 4.96 & 6.02 & 0.53 & 5.69 & 7.60 & 0.36 & 5.11 & 6.77 & 0.47 & 4.62 & 5.80 & 0.55 & 4.28 & 5.73 & 0.55 \\
+JINA      & 5.73 & 8.40 & 0.27 & 4.18 & 6.00 & 0.54 & 4.71 & 6.42 & 0.60 & 7.45 & 9.69 & 0.26 & 4.30 & 5.62 & 0.58 & 4.01 & 5.49 & 0.49 \\
+BGE       & 5.99 & 7.91 & 0.27 & 5.12 & 6.40 & 0.54 & 5.65 & 7.53 & 0.15 & 5.03 & 6.85 & 0.21 & 4.77 & 5.69 & 0.55 & 4.49 & 5.68 & 0.56 \\
+BERT-S    & 6.71 & 8.82 & 0.23 & 5.32 & 7.32 & 0.34 & 5.30 & 7.06 & 0.42 & 6.30 & 7.97 & 0.34 & 4.74 & 6.01 & 0.49 & 4.72 & 5.90 & 0.51 \\
+ERNIE     & 5.46 & 7.88 & 0.31 & 5.20 & 6.72 & 0.21 & 4.74 & 6.42 & 0.61 & 5.95 & 7.94 & 0.22 & 4.90 & 5.85 & 0.50 & 4.75 & 5.79 & 0.54 \\
+STELLA    & 4.11 & 5.39 & 0.60 & 6.47 & 7.93 & 0.43 & 5.50 & 7.31 & 0.58 & 5.90 & 8.51 & 0.22 & 4.51 & 5.15 & 0.64 & 4.20 & 5.40 & 0.60 \\
+RoBERTa-S & 6.74 & 9.16 & 0.21 & 5.38 & 7.30 & 0.14 & 5.30 & 6.82 & 0.34 & 6.22 & 8.10 & 0.39 & 4.98 & 5.79 & 0.50 & 4.80 & 5.90 & 0.50 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{threeparttable}
+\end{table*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig15.pdf}
+\caption{RMSE comparison between training and test sets for MMSE regression (Figure 15).}
+\label{fig:fig15_reg_train_vs_test}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig16.pdf}
+\caption{Regression performance across embeddings and regressors (Figure 16).}
+\label{fig:fig16_reg_ranked}
+\end{figure}
+
+\subsection{Key comparisons (baseline and SOTA context)}
+\label{subsec:key_comparisons_baseline_sota}
+
+The classification findings compare favorably with the baseline used in the manuscript (75\% accuracy), with most strong embedding--classifier combinations exceeding this threshold in combined analyses. This baseline crossing is not marginal; several methods remain consistently above it across training LOSO, holdout test, and combined LOSO settings. Such repeated superiority suggests that the approach is not overfitted to a single evaluation protocol.
+
+Within the study’s internal comparisons, embedding-based classification also outperformed the best compression-based result reported earlier (85.42\%), with top embedding configurations reaching 87.50\% in holdout and 87.18\% in combined LOSO. The margin is not massive, but it is stable enough to support the conclusion that semantically informed text representations add predictive value over purely compression-driven textual similarity in this dataset. This is particularly relevant because compression methods are often attractive due to simplicity; still, the reported numbers show that modern embeddings can provide a measurable edge when carefully paired with suitable classifiers.
+
+For regression, the comparison is more nuanced. The manuscript indicates that compression-based approaches from another experimental block achieved stronger RMSE in some settings (e.g., LZ77 with 5NN at 4.70), while embedding-based regression reached its best around 5.15 in combined analysis. This suggests that the embedding advantage is clearer in classification than in MMSE prediction under the current protocol. Importantly, this does not invalidate embedding methods; instead, it clarifies where they currently provide the highest benefit and where additional modeling work is still needed.
+
+Against broader literature, your manuscript reports related works with higher classification peaks (up to 93.8\% in specific setups), often involving model fusion or more complex architectures. Therefore, your results should be positioned as competitive and robust under a controlled embedding-centric benchmark, rather than as absolute state-of-the-art. This framing is strategically stronger for reviewers: it emphasizes methodological clarity, reproducibility, and practical model-selection insights, which are real contributions, especially in biomedical signal/NLP settings where reproducibility is often weaker than raw headline accuracy.
+
+For MMSE regression, the manuscript also cites a challenge-best around RMSE 3.75 using a multimodal CRNN-based strategy. This clearly sets an upper benchmark beyond the current text-only embedding setup. Presenting this gap transparently is a strength, not a weakness, because it motivates why your findings should be interpreted as an evidence-based text representation study and as a step toward future multimodal integration rather than a final endpoint.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig17.pdf}
+\caption{Integrated comparison of classification results across experimental blocks (Figure 17).}
+\label{fig:fig17_integrated_classification}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{fig18.pdf}
+\caption{Integrated comparison of regression results across experimental blocks (Figure 18).}
+\label{fig:fig18_integrated_regression}
+\end{figure}
+
+\subsection{Errors and robustness (short and objective)}
+\label{subsec:errors_robustness}
+
+Error analysis across classification models suggests that robustness depends on both representation and classifier inductive bias. STELLA, GTE, and LEM consistently occupy the top performance group, while traditional embeddings tend to be less stable and SFR2 shows recurrent weakness in several classifier combinations. At the algorithm level, LR, SVM, RF, and NN are generally more reliable than 1NN, whose performance repeatedly degrades in high-dimensional embedding space. This behavior is technically plausible: nearest-neighbor methods with $k=1$ can be brittle under sparse local neighborhoods and embedding anisotropy.
+
+In regression, robustness is lower overall. NB and RF show the most consistent behavior across embeddings, whereas 1NN frequently yields poorer errors. This indicates that smoother decision functions and stronger regularization tendencies may be better suited for MMSE estimation from transcript embeddings than highly local instance-based modeling. The practical implication is that deployment-oriented pipelines should prioritize stable error profiles over occasional best-case points.
+
+Statistical testing strengthens the robustness claim. The Friedman test yielded $p < 0.01$ for both classification and regression comparisons, and Nemenyi post-hoc analysis identified specific embedding pairs with significant differences. This means that observed ranking patterns are unlikely to be random fluctuations; representation choice has a statistically meaningful effect on outcomes.
+
+\subsection{Clinical and technical interpretation of findings}
+\label{subsec:clinical_technical_interpretation}
+
+Clinically, the classification results support embedding-based transcript analysis as a realistic screening aid for AD risk stratification. Accuracies in the high-80\% range, combined with reduced false negatives in leading configurations, indicate potential utility for first-line triage where specialist access is limited. The method is non-invasive, scalable, and compatible with remote or low-resource workflows when speech samples can be collected and transcribed. However, these tools should be framed as decision-support systems---not standalone diagnostic instruments---because confirmatory diagnosis still requires broader clinical evaluation.
+
+Technically, the strongest insight is that ``embedding choice'' is a first-order design decision. Performance differences between embedding families are large enough to alter clinical usefulness, and these differences persist after statistical testing. Thus, studies in this domain should avoid reporting single-model outcomes without representation ablations. The manuscript’s cross-protocol design (training LOSO, holdout, combined LOSO) is valuable because it exposes when improvements are stable versus split-specific.
+
+The regression findings refine this interpretation. While text embeddings carry meaningful severity signal, MMSE prediction remains more fragile and closer to baseline in broad validation. This likely reflects both label complexity (continuous cognitive scores are harder than binary labels) and possible mismatch between general-purpose embedding pretraining objectives and clinical cognitive quantification. Consequently, future gains in MMSE prediction may depend on domain adaptation, supervised fine-tuning, or multimodal fusion rather than generic embedding replacement alone.
+
+\subsection{Comparison with prior literature}
+\label{subsec:comparison_prior_literature}
+
+The related-work section in your manuscript shows that very high AD classification accuracies have been reported (up to $\sim$93.8\%) using combinations such as BERT/RoBERTa with SVM and model-fusion strategies. Compared with those best-case studies, your top accuracy (87.50\% holdout; 87.18\% combined LOSO) is lower, but still strong---especially considering your explicit focus on controlled embedding benchmarking across multiple models and protocols. This distinction matters: your contribution is less about introducing a novel deep architecture and more about producing transferable evidence on representation selection, robustness, and practical algorithm pairing.
+
+For MMSE regression, literature-level bests (e.g., RMSE 3.75 with multimodal CRNN) remain ahead of your text-only embedding pipeline. Rather than framing this as underperformance, a more constructive interpretation is scope differentiation: your study isolates the text-embedding component and identifies where it helps most (classification) and where multimodality likely becomes necessary (fine-grained severity prediction). This positioning aligns well with biomedical engineering journals that value clear experimental decomposition and reproducible comparisons.
+
+\subsection{Limitations}
+\label{subsec:limitations}
+
+Several limitations should be considered when interpreting these findings. First, the ADReSS 2020 dataset, although demographically balanced, does not represent the full diversity of cognitive conditions, accents, sociocultural backgrounds, or linguistic variability encountered in real clinical practice. This constrains external validity and may inflate apparent transferability across populations. Second, transcript- and recording-quality issues (e.g., noise and overlap in audio-origin data) can propagate through the pipeline and degrade model reliability. Third, embeddings were used in pretrained form without task-specific fine-tuning for AD progression modeling, which may cap achievable performance---especially in MMSE regression.
+
+A further limitation is methodological scope: the strongest regressors still hover near baseline in broad validation, indicating that text alone may be insufficient for high-precision cognitive-score prediction in all settings. Also, as with many benchmark studies, hyperparameter-search granularity and model-calibration analyses were not the central focus; additional optimization may improve performance but could also increase overfitting risk if not handled with nested validation.
+
+\subsection{Practical implications}
+\label{subsec:practical_implications}
+
+From an application perspective, the results support a pragmatic implementation strategy:
+
+\begin{itemize}
+    \item \textbf{Prioritize classification for screening workflows.}  
+    Embedding-based classification currently shows the strongest and most stable gains.
+
+    \item \textbf{Use regression as a complementary estimate, not a standalone endpoint.}  
+    MMSE prediction can add value but should be interpreted with uncertainty bounds and clinical context.
+
+    \item \textbf{Select models by robustness, not only peak score.}  
+    Stable performance across holdout and combined LOSO is more meaningful for deployment than a single high result.
+
+    \item \textbf{Prefer embedding--classifier pairs with balanced errors.}  
+    Configurations like STELLA/GTE/LEM with LR/SVM/RF/NN appear operationally safer than brittle local methods such as 1NN.
+
+    \item \textbf{Plan translational upgrades via adaptation and multimodality.}  
+    Fine-tuned domain embeddings, ensemble designs, and multimodal pipelines are plausible next steps to close the gap with top literature in MMSE regression.
+\end{itemize}
+
+Overall, this study provides actionable evidence that representation engineering is central to AD language analytics and that modern text embeddings can deliver clinically relevant performance for scalable screening support, while also clarifying where additional methodological development is still necessary.
+
 
 %% Use \subsection commands to start a subsection.
-\subsection{Example Subsection}
+\subsection{Introduction}
+
 \label{subsec1}
 
 Subsection text.
@@ -233,6 +903,7 @@ f(x) = (x+a)(x+b)
 %% Use \includegraphics command to insert graphic files. Place graphics files in 
 %% working directory.
 \centering%% For centre alignment of image.
+
 \includegraphics{example-image-a}
 %% Use \caption command for figure caption and label.
 \caption{Figure Caption}\label{fig1}
@@ -271,6 +942,152 @@ Example citation, See \cite{lamport94}.
 %% For numbered reference style
 %% \bibitem{label}
 %% Text of bibliographic item
+
+\bibitem{Skaria2022}
+A.~P. Skaria,
+\textit{The economic and societal burden of Alzheimer disease: managed care considerations},
+The American Journal of Managed Care,
+vol.~28, no.~10 Suppl,
+pp.~S188--S196,
+2022.
+
+\bibitem{Twiss2025}
+E.~Twiss, C.~McPherson, and D.~F. Weaver,
+\textit{Global Diseases Deserve Global Solutions: Alzheimer’s Disease},
+Neurology International,
+vol.~17, no.~6,
+p.~92,
+2025.
+
+
+\bibitem{ElHayek2019}
+Y.~H. El-Hayek, R.~E. Wiley, C.~P. Khoury, R.~P. Daya, C.~Ballard, A.~R. Evans, M.~Karran, J.~L. Molinuevo, M.~Norton, and A.~Atri,
+\textit{Tip of the iceberg: assessing the global socioeconomic costs of Alzheimer’s disease and related dementias and strategic implications for stakeholders},
+Journal of Alzheimer’s Disease,
+vol.~70, no.~2,
+pp.~323--341,
+2019.
+
+\bibitem{Brookmeyer2007}
+R.~Brookmeyer, E.~Johnson, K.~Ziegler-Graham, and H.~M. Arrighi,
+\textit{Forecasting the global burden of Alzheimer’s disease},
+Alzheimer's \& Dementia,
+vol.~3, no.~3,
+pp.~186--191,
+2007.
+
+\bibitem{Laske2015}
+C.~Laske, H.~R. Sohrabi, S.~M. Frost, K.~López-de-Ipiña, P.~Garrard, M.~Buscema, J.~Dauwels \textit{et al.},
+\textit{Innovative diagnostic tools for early detection of Alzheimer's disease},
+Alzheimer's \& Dementia,
+vol.~11, no.~5,
+pp.~561--578,
+2015.
+
+\bibitem{Ahmad2023}
+S.~Ahmad, M.~Aijaz, M.~Ahmad, A.~Hafeez, M.~Asif, A.~Kumar, A.~Al-Taie, and M.~A.~Ansari,
+\textit{Early detection of Alzheimer's disease by using the latest techniques},
+Authorea Preprints,
+2023.
+
+\bibitem{BesinHumardani2024}
+V.~Besin and F.~M. Humardani,
+\textit{Early detection of Alzheimer's disease using the MEMORIES mnemonic},
+Chronic Diseases and Translational Medicine,
+vol.~11, no.~1,
+pp.~22--32,
+2024.
+
+\bibitem{Beltrami2018}
+D.~Beltrami, G.~Gagliardi, R.~R. Favretti, E.~Ghidoni, F.~Tamburini, and L.~Calz\`a,
+\textit{Speech analysis by natural language processing techniques: a possible tool for very early detection of cognitive decline?},
+Frontiers in Aging Neuroscience,
+vol.~10,
+p.~369,
+2018.
+
+\bibitem{Lindsay2021}
+H.~Lindsay, J.~Tr{\"o}ger, and A.~K{\"o}nig,
+\textit{Language impairment in Alzheimer’s disease—robust and explainable evidence for AD-related deterioration of spontaneous speech through multilingual machine learning},
+Frontiers in Aging Neuroscience,
+vol.~13,
+p.~642033,
+2021.
+
+\bibitem{Nyongesa2025}
+C.~A. Nyongesa, M.~Hogarth, and J.~Pa,
+\textit{Artificial intelligence-driven natural language processing for identifying linguistic patterns in Alzheimer's disease and mild cognitive impairment: a study of lexical, syntactic, and cohesive features of speech through picture description tasks},
+Journal of Alzheimer’s Disease,
+2025.
+
+\bibitem{Gosztolya2019}
+G.~Gosztolya, V.~Vincze, L.~T{\'o}th, M.~P{\'a}k{\'a}ski, J.~K{\'a}lm{\'a}n, and I.~Hoffmann,
+\textit{Identifying mild cognitive impairment and mild Alzheimer’s disease based on spontaneous speech using ASR and linguistic features},
+Computer Speech \& Language,
+vol.~53,
+pp.~181--197,
+2019.
+
+\bibitem{PeledCohenReichart2025}
+L.~Peled-Cohen and R.~Reichart,
+\textit{A systematic review of NLP for dementia: tasks, datasets, and opportunities},
+Transactions of the Association for Computational Linguistics,
+vol.~13,
+pp.~1204--1244,
+2025.
+
+\bibitem{delaFuenteGarcia2020}
+S.~de~la~Fuente~Garcia, C.~W. Ritchie, and S.~Luz,
+\textit{Artificial intelligence, speech, and language processing approaches to monitoring Alzheimer’s disease: a systematic review},
+Journal of Alzheimer’s Disease,
+vol.~78, no.~4,
+pp.~1547--1574,
+2020.
+
+\bibitem{Searle2020}
+T.~Searle, Z.~Ibrahim, and R.~Dobson,
+\textit{Comparing natural language processing techniques for Alzheimer's dementia prediction in spontaneous speech},
+arXiv preprint arXiv:2006.07358,
+2020.
+
+\bibitem{Adams2026}
+T.~Adams, Y.~Salimi, M.~C. Ay, D.~Valderrama, M.~Jacobs, and H.~Fr{\"o}hlich,
+\textit{A benchmark of text embedding models for semantic harmonization of Alzheimer's disease cohorts},
+Journal of Prevention of Alzheimer’s Disease,
+vol.~13, no.~1,
+p.~100420,
+2026.
+
+\bibitem{Balagopalan2021}
+A.~Balagopalan, B.~Eyre, J.~Robin, F.~Rudzicz, and J.~Novikova,
+\textit{Comparing pre-trained and feature-based models for prediction of Alzheimer's disease based on speech},
+Frontiers in Aging Neuroscience,
+vol.~13,
+p.~635945,
+2021.
+
+\bibitem{Pappagari2021}
+R.~Pappagari, J.~Cho, S.~Joshi, L.~Moro-Vel{\'a}zquez, P.~Zelasko, J.~Villalba, and N.~Dehak,
+\textit{Automatic detection and assessment of Alzheimer disease using speech and language technologies in low-resource scenarios},
+Interspeech,
+pp.~3825--3829,
+2021.
+
+\bibitem{Ajroudi2024}
+K.~Ajroudi, M.~I. Khedher, O.~Jemai, and M.~A. El-Yacoubi,
+\textit{Exploring the efficacy of text embeddings in early dementia diagnosis from speech},
+in \textit{Proceedings of the 16th International Conference on Human System Interaction (HSI)},
+pp.~1--6,
+IEEE,
+2024.
+
+\bibitem{Wang2022}
+Y.~Wang, T.~Wang, Z.~Ye, L.~Meng, S.~Hu, X.~Wu, X.~Liu, and H.~Meng,
+\textit{Exploring linguistic feature and model combination for speech recognition based automatic AD detection},
+arXiv preprint arXiv:2206.13758,
+2022.
+
+
 
 \bibitem{lamport94}
   Leslie Lamport,
